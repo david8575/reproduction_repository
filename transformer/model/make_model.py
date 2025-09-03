@@ -118,7 +118,7 @@ if __name__ == "__main__":
     
     try:
         output, decoder_out = model(src, tgt)
-        print(f"Forward pass 성공!")
+        print(f"Forward pass 성공")
         print(f"Output shape: {output.shape}")
         print(f"Decoder output shape: {decoder_out.shape}")
     except Exception as e:
