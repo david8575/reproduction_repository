@@ -1,3 +1,7 @@
+import math
+import torch
+import torch.nn as nn
+
 class PositionalEncoding(nn.Module):
     def __int__(self, d_embed, max_len=256, device=torch.device("cpu")):
         super(PositionalEncoding, self).__init__()

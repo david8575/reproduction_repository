@@ -1,3 +1,6 @@
+import torch.nn as nn
+import copy
+
 class Decoder(nn.Module):
     def __init__(self, decoder_block, n_layer):
         super(Decoder, self).__init__()

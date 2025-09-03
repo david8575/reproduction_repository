@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 class ResidualConnectLayer(nn.Module):
     def __init__(self):
         super(ResidualConnectLayer, self).__init__()

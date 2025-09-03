@@ -1,10 +1,15 @@
+import torch.nn as nn
+import copy
+
+from model.layers.residual_connect_layer import ResidualConnectLayer
+
 class DecoderBlock(nn.Module):
     def __init__(self, self_attetion, cross_attention, posiotion_ff):
         super(DecoderBlock, self).__init__()
         self.self_attention = self_attetion
         self.cross_attention = cross_attention
         self.position_ff = posiotion_ff
-        self.residuals = [ResidualConnectionLayer(), ResidualConnectionLayer(), ResidualConnectionLayer()]
+        self.residuals = [ResidualConnectLayer(), ResidualConnectLayer(), ResidualConnectLayer()]
 
     def forward(self, tgt, encoder_out, tgt_mask, src_tgt_mask):
         out = tgt

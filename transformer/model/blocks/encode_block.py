@@ -1,9 +1,14 @@
+import torch.nn as nn
+
+from model.layers.residual_connect_layer import ResidualConnectLayer
+
+
 class EncoderBlock(nn.Module):
     def __init__(self, self_attention, position_ff):
         super(EncoderBlock, self).__init__()
         self.self_attention = self_attention
         self.position_ff = position_ff
-        self.residuals = [ResisdualConnectlayer(), ResidualConnectLayer()]
+        self.residuals = [ResidualConnectLayer(), ResidualConnectLayer()]
 
     def forward(self, x, mask):
         out = x

@@ -1,3 +1,6 @@
+import torch
+import numpy as np
+
 def make_pad_mask(self, query, key, pad_idx=1):
     query_seq_len, key_seq_len = query.size(1), key.size(1)
 

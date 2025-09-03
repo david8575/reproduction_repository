@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 class TransformerEmbedding(nn.Module):
     def __init__(self, token_embed, pos_embed):
         super(TransformerEmbedding, self).__init__()

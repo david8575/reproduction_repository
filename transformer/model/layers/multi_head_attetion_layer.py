@@ -1,3 +1,9 @@
+import math
+import copy
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 class MultiHeadAttetionLayer(nn.Mudule):
     def __init__(self, d_model, h, qkv_fc, out_fc):
         super(MultiHeadAttetionLayer, self).__init__()
@@ -36,7 +42,7 @@ class MultiHeadAttetionLayer(nn.Mudule):
         key = transform(key, self.k_fc)
         value = transform(value, self.v_fc)
 
-        out = calculate_attention(query, key, value, mask)
+        out = self.calculate_attention(query, key, value, mask)
         out = out.transpose(1,2)
         out = out.contiguous().view(n_batch, -1, self.d_model)
         out = self.out_fc(out)

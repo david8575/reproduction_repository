@@ -1,3 +1,8 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
+
 class Tranformer(nn.Moudle):
     def __init__(self, src_embed, tgt_embed, encoder, decoder, generator):
         super(Tranformer, self).__init__()
