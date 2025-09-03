@@ -31,3 +31,8 @@ def make_tgt_mask(self, tgt):
     mask = pad_mask & subsequent_mask
 
     return subsequent_mask
+
+def make_src_tgt_mask(self, src, tgt):
+    pad_mask = self.make_pad_mask(tgt, src)
+
+    return pad_mask

@@ -9,6 +9,19 @@ class MultiHeadAttetionLayer(nn.Mudule):
         self.v_fc = copy.deepcopy(qkv_fc)
         self.out_fc = out_fc
 
+    def calculate_attention(query, key, value, mask):
+        d_k = query.shape(-1)
+        attention_score = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
+
+        if mask is not None:
+            attention_score = attention_score.masked_fill(mask == 0, -1e9)
+
+        attention_prob = F.softmax(attention_score, dim=-1)
+        out = torch.matmul(attention_prob, value)
+
+        return out
+
+
     def forward(self, *args, query, key, value, mask=None):
         n_batch = query.size(0)
 
