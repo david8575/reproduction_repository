@@ -5,3 +5,8 @@
 
 # transformer
 /transformer/.venv
+/transformer/model/__pycache__
+/transformer/model/models/__pycache__
+/transformer/model/embeddings/__pycache__
+/transformer/model/layers/__pycache__
+/transformer/model/blocks/__pycache__

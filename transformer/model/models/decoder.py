@@ -3,9 +3,9 @@ import copy
 
 class Decoder(nn.Module):
     def __init__(self, decoder_block, n_layer):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.n_layers = n_layer
-        self.layers = nn.ModuleList([copy.deepcopy(decoder_block) for _ in range(self.layers)])
+        self.layers = nn.ModuleList([copy.deepcopy(decoder_block) for _ in range(self.n_layers)])
 
     def forward(self, tgt, encoder_out, tgt_mask, src_tgt_mask):
         out = tgt
