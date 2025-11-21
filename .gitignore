@@ -10,3 +10,6 @@
 /transformer/model/embeddings/__pycache__
 /transformer/model/layers/__pycache__
 /transformer/model/blocks/__pycache__
+
+# learning_to_simluate
+/learning_to_simulate/.venv
