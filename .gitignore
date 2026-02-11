@@ -1,0 +1,7 @@
+# neural_execution
+neural_execution/.venv
+neural_execution/__pycache__
+neural_execution/.vscode
+
+# transformer
+transformer/.venv
