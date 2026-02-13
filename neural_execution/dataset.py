@@ -1,6 +1,6 @@
 import torch
 from torch_geometric.data import Data
-from utils import generate_graph, bfs_trace
+from utils import generate_graph, bfs_trace, bellman_ford_trace
 
 def graph_to_edge_index(G):
     """
@@ -13,31 +13,63 @@ def graph_to_edge_index(G):
 
     return edge_index
 
+def get_edge_weights(G, edge_index):
+    weights = []
+
+    for i in range(edge_index.shape[1]):
+        u = edge_index[0][i].item()
+        v = edge_index[1][i].item()
+        weights.append(G[u][v]['weight'])
+
+    return torch.tensor(weights, dtype=torch.float).unsqueeze(1)
+
 def create_bfs_dataset(n_graphs, n_nodes, p=0.3):
-    """
-    generate BFS dataset
-    """
-    dataset= []
+    dataset = []
 
     for _ in range(n_graphs):
         G = generate_graph(n_nodes, p)
         edge_index = graph_to_edge_index(G)
+        edge_attr = get_edge_weights(G, edge_index) / 10.0  # 정규화
         source = 0
         traces = bfs_trace(G, source)
 
-        # 연속된 두 단계를 (입력, 정답) 쌍으로 만들기
         for t in range(len(traces)-1):
             x = torch.tensor(traces[t], dtype=torch.float).unsqueeze(1)
             y = torch.tensor(traces[t+1], dtype=torch.float).unsqueeze(1)
-            data = Data(x=x, y=y, edge_index=edge_index)
+            is_last = 1.0 if t == len(traces) - 2 else 0.0
+            data = Data(x=x, y=y, edge_index=edge_index, edge_attr=edge_attr, is_last=is_last)
             dataset.append(data)
 
     return dataset
 
+def create_bellman_ford_dataset(n_graphs, n_nodes, p=0.3):
+    dataset = []
+    for _ in range(n_graphs):
+        G = generate_graph(n_nodes, p)
+        edge_index = graph_to_edge_index(G)
+        edge_attr = get_edge_weights(G, edge_index) / 10.0
+        source = 0
+        traces = bellman_ford_trace(G, source)
+
+        for t in range(len(traces) - 1):
+            x = torch.tensor(traces[t], dtype=torch.long)
+            y = torch.tensor(traces[t + 1], dtype=torch.long)
+            mask = (y != -1)
+            is_last = 1.0 if t == len(traces) - 2 else 0.0
+            data = Data(x=x, y=y, edge_index=edge_index,
+                       edge_attr=edge_attr, mask=mask, is_last=is_last)
+            dataset.append(data)
+    return dataset
+
+
 if __name__=="__main__":
-    dataset = create_bfs_dataset(n_graphs=5, n_nodes=8)
-    print(f"총 샘플 수: {len(dataset)}")
-    print(f"\n첫 번째 샘플:")
-    print(f"  x (입력):  {dataset[0].x.squeeze().tolist()}")
-    print(f"  y (정답):  {dataset[0].y.squeeze().tolist()}")
-    print(f"  edge_index shape: {dataset[0].edge_index.shape}")
+    bfs_dataset = create_bfs_dataset(n_graphs=5, n_nodes=8)
+    print(f"    [BFS Samples] {len(bfs_dataset)}")
+    print(f"        x: {bfs_dataset[0].x.squeeze().tolist()}")
+    print(f"        y: {bfs_dataset[0].y.squeeze().tolist()}")
+
+    bf_dataset = create_bellman_ford_dataset(n_graphs=3, n_nodes=6)
+    print(f"    [BF Samples] {len(bf_dataset)}")
+    print(f"        x (predecessor): {bf_dataset[0].x.tolist()}")
+    print(f"        y (predecessor): {bf_dataset[0].y.tolist()}")
+    print(f"        mask: {bf_dataset[0].mask.tolist()}")

@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 from torch_geometric.nn import MessagePassing
 
-class MPNN(MessagePassing):
-    def __init__(self, hidden_dim=32):
+# Processor: 공유 GNN
+class Processor(MessagePassing):
+    def __init__(self, hidden_dim):
         super().__init__(aggr='max')
 
-        # 메세지 생성 네트워크: 이웃 feature -> 메세지
         self.msg_net = nn.Sequential(
-            nn.Linear(hidden_dim,hidden_dim),
+            nn.Linear(hidden_dim * 2 + 1, hidden_dim),
             nn.ReLU(),
         )
 
@@ -17,35 +17,65 @@ class MPNN(MessagePassing):
             nn.ReLU(),
         )
 
-        self.encoder = nn.Linear(1, hidden_dim)
-        self.decoder = nn.Linear(hidden_dim, 1)
+    def forward(self, x, edge_index, edge_attr):
+        return self.propagate(edge_index, x=x, edge_attr=edge_attr)
 
-    def forward(self, x, edge_index):
-        h = self.encoder(x)
-        h = self.propagate(edge_index, x=h)
-        out = self.decoder(h)
+    def message(self, x_i, x_j, edge_attr):
+        combined = torch.cat([x_i, x_j, edge_attr], dim=-1)
+        return self.msg_net(combined)
 
-        return torch.sigmoid(out)
-    
-    def message(self, x_j):
-        return self.msg_net(x_j)
-    
     def update(self, aggr_out, x):
         combined = torch.cat([x, aggr_out], dim=-1)
-        
         return self.update_net(combined)
-    
-if __name__ == "__main__":
-    from dataset import create_bfs_dataset
 
-    model = MPNN(hidden_dim=32)
-    dataset = create_bfs_dataset(n_graphs=3, n_nodes=8)
 
-    data = dataset[0]
-    out = model(data.x, data.edge_index)
+# Encoder-Processor-Decoder
+class AlgorithmExecutor(nn.Module):
+    def __init__(self, hidden_dim=32, max_nodes=128):
+        super().__init__()
+        self.hidden_dim = hidden_dim
 
-    print(f"입력 shape:  {data.x.shape}")       # [8, 1]
-    print(f"출력 shape:  {out.shape}")           # [8, 1]
-    print(f"입력 (현재 상태): {data.x.squeeze().tolist()}")
-    print(f"출력 (예측):      {[round(v, 2) for v in out.squeeze().tolist()]}")
-    print(f"정답 (다음 상태): {data.y.squeeze().tolist()}")
+        # 알고리즘별 Encoder
+        self.encoder_bfs = nn.Linear(1, hidden_dim)
+        self.encoder_bf = nn.Embedding(max_nodes, hidden_dim)
+
+        # 공유 Processor
+        self.processor = Processor(hidden_dim)
+
+        # 알고리즘별 Decoder
+        self.decoder_bfs = nn.Linear(hidden_dim, 1)
+        # BF: pointer mechanism (h @ h.T)이므로 별도 decoder 불필요
+
+        # 알고리즘별 Termination
+        self.termination_bfs = nn.Sequential(
+            nn.Linear(hidden_dim, 1),
+            nn.Sigmoid(),
+        )
+        self.termination_bf = nn.Sequential(
+            nn.Linear(hidden_dim, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x, edge_index, edge_attr, algorithm='bfs'):
+        # Encoding
+        if algorithm == 'bfs':
+            h = self.encoder_bfs(x)
+        elif algorithm == 'bellman-ford':
+            h = self.encoder_bf(x.clamp(min=0))  # -1(미도달)은 0으로 치환
+
+        # Processing (공유)
+        h = self.processor(h, edge_index, edge_attr)
+
+        # Decoding
+        if algorithm == 'bfs':
+            out = torch.sigmoid(self.decoder_bfs(h))
+        elif algorithm == 'bellman-ford':
+            out = torch.mm(h, h.t())  # [n_nodes, n_nodes] pointer logits
+
+        # Termination
+        if algorithm == 'bfs':
+            term = self.termination_bfs(h.mean(dim=0, keepdim=True))
+        elif algorithm == 'bellman-ford':
+            term = self.termination_bf(h.mean(dim=0, keepdim=True))
+
+        return out, term

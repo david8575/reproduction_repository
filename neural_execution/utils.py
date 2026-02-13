@@ -47,13 +47,37 @@ def bfs_trace(G, source):
         queue = next_queue
 
     return traces
-"""
-G = generate_graph(6, p=0.4)
-traces = bfs_trace(G, source=0)
 
-print(f"엣지: {list(G.edges())}")
-print(f"시작 노드: 0")
-print(f"총 {len(traces)} 단계:")
-for i, t in enumerate(traces):
-    print(f"  Step {i}: {t}")
-"""
+def bellman_ford_trace(G, source):
+    n = G.number_of_nodes()
+    dist = [float('inf')] * n
+    pred = [-1] * n    
+    dist[source] = 0
+    pred[source] = source
+
+    traces = []
+    traces.append(list(pred))
+
+    for _ in range(n-1):
+        new_dist = list(dist)
+        new_pred = list(pred)
+
+        for u, v, data in G.edges(data=True):
+            w = data['weight']
+
+            if dist[u] + w < new_dist[v]:
+                new_dist[v] = dist[u] + w
+                new_pred[v] = u
+
+            if dist[v] + w < new_dist[u]:
+                new_dist[u] = dist[v] + w
+                new_pred[u] = v
+
+        if new_dist == dist:
+            break
+
+        dist = new_dist
+        pred = new_pred
+        traces.append(list(pred))
+
+    return traces
