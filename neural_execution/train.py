@@ -6,7 +6,8 @@ from dataset import create_bfs_dataset, create_bellman_ford_dataset
 
 # 학습 함수
 def train_bfs_only(model, bfs_train, epochs):
-    bce_loss = nn.BCELoss()
+    # BFS 데이터만의 학습
+    bce_loss = nn.BCELoss() # BFS는 이진 분류이므로 Binary Cross-Entropy 이용
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(epochs):
@@ -27,8 +28,9 @@ def train_bfs_only(model, bfs_train, epochs):
             print(f"    Epoch {epoch+1} | Loss {total_loss/len(bfs_train):.6f}")
 
 def train_bf_only(model, bf_train, epochs):
+    # Bellman-Ford 데이터로만 학습
     bce_loss = nn.BCELoss()
-    ce_loss = nn.CrossEntropyLoss()
+    ce_loss = nn.CrossEntropyLoss() # 다중 분류
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(epochs):
@@ -53,6 +55,7 @@ def train_bf_only(model, bf_train, epochs):
             print(f"    Epoch {epoch+1} | Loss {total_loss/len(bf_train):.6f}")
 
 def train_joint(model, bfs_train, bf_train, epochs):
+    # bfs bellman-ford 같이 학습
     bce_loss = nn.BCELoss()
     ce_loss = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -136,14 +139,15 @@ def evaluate_bf(model, n_nodes_list):
 # 실행 함수
 def mode_train(args):
     print(f"[Dataset Generating......]")
-    bfs_train = create_bfs_dataset(n_graphs=500, n_nodes=8)
-    bf_train = create_bellman_ford_dataset(n_graphs=500, n_nodes=8)
+    bfs_train = create_bfs_dataset(n_graphs=500, n_nodes=20)
+    bf_train = create_bellman_ford_dataset(n_graphs=500, n_nodes=20)
     print(f"[BFS] Train {len(bfs_train)} | [Bellman-Ford] Train {len(bf_train)}")
 
     model = AlgorithmExecutor(hidden_dim=args.hidden_dim)
     train_joint(model, bfs_train, bf_train, args.epochs)
 
-    n_nodes_list = [8, 16, 32, 64]
+    n_nodes_list = [20, 50, 100]
+    
     print(f"[Test]")
     bfs_results = evaluate_bfs(model, n_nodes_list)
     bf_results = evaluate_bf(model, n_nodes_list)
@@ -153,10 +157,10 @@ def mode_train(args):
 
 def mode_transfer(args):
     print(f"[Dataset Generating......]")
-    bfs_train = create_bfs_dataset(n_graphs=500, n_nodes=8)
-    bf_train = create_bellman_ford_dataset(n_graphs=500, n_nodes=8)
+    bfs_train = create_bfs_dataset(n_graphs=500, n_nodes=20)
+    bf_train = create_bellman_ford_dataset(n_graphs=500, n_nodes=20)
 
-    n_nodes_list = [8, 16, 32, 64]
+    n_nodes_list = [20, 50, 100]
 
     # BF 단독
     print(f"[BF Only]")
