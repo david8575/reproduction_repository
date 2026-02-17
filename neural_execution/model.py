@@ -45,9 +45,10 @@ class Processor(MessagePassing):
 
 # Encoder-Processor-Decoder
 class AlgorithmExecutor(nn.Module):
-    def __init__(self, hidden_dim=32, max_nodes=128):
+    def __init__(self, hidden_dim=32, max_nodes=128, n_layers=3):
         super().__init__()
         self.hidden_dim = hidden_dim
+        self.n_layers = n_layers
 
         # 알고리즘별 Encoder
         self.encoder_bfs = nn.Linear(1, hidden_dim)
@@ -80,7 +81,8 @@ class AlgorithmExecutor(nn.Module):
             h = self.encoder_bf(x) 
 
         # Processing (공유)
-        h = self.processor(h, edge_index, edge_attr)
+        for _ in range(self.n_layers):
+            h = self.processor(h, edge_index, edge_attr)
 
         # Decoding
         if algorithm == 'bfs':
