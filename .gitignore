@@ -5,3 +5,12 @@ neural_execution/.vscode
 
 # transformer
 transformer/.venv
+
+# pytorch_own
+pytorch_own/.venv
+pytorch_own/__pycache__
+pytorch_own/checkpoints
+pytorch_own/data
+pytorch_own/my_models/__pycache__
+pytorch_own/original_models/__pycache__
+.DS_Store
